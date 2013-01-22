@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <entry key="Unauthorized">认证失败。</entry>
+  <entry key="InvalidSignature">无效的署名。</entry>
+  <entry key="IncorrectSignature">署名匹配失败。请重新登录。</entry>
+  <entry key="InvalidAccount">错误的用户名或密码。</entry>
+</properties>
