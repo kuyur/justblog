@@ -2,9 +2,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>info.kuyur.justblog</groupId>
-	<artifactId>justblog</artifactId>
+	<artifactId>justblog-rest-stateful</artifactId>
 	<packaging>war</packaging>
-	<name>justblog</name>
+	<name>justblog-rest-stateful</name>
 	<version>1.0.0</version>
 	<description>A restful blog.</description>
 	<url>http://justblog.kuyur.info</url>

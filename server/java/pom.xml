@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>info.kuyur.justblog</groupId>
-  <artifactId>justblog-all</artifactId>
+  <artifactId>justblog-all-stateless</artifactId>
   <version>1.0.0</version>
   <packaging>pom</packaging>
   <name>justblog-all</name>
@@ -14,7 +14,18 @@
   </organization>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <target-war-project>justblog-rest</target-war-project>
   </properties>
+
+  <profiles>
+    <profile>
+      <id>stateful</id>
+      <properties>
+        <target-war-project>justblog-rest-stateful</target-war-project>
+      </properties>
+    </profile>
+  </profiles>
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -28,6 +39,6 @@
     <module>justblog-models</module>
     <module>justblog-dac</module>
     <module>justblog-service</module>
-    <module>justblog</module>
+    <module>${target-war-project}</module>
   </modules>
 </project>
