@@ -1,0 +1,6 @@
+host=localhost
+port=8080
+https=false
+base=/justblog
+account=admin
+password=admin
