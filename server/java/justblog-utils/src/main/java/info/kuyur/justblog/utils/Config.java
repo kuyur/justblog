@@ -13,5 +13,11 @@ public class Config {
 	 */
 	public static final int DEFAULT_VALIDITY_PERIOD = 100 * 1000;
 
+	/**
+	 * Default Cookie-Token for logined-session.
+	 * It is only used in stateful version. 
+	 */
+	public static final String LOGINED_SESSION_TOKEN = "JUSTBLOGSID";
+
 	private Config(){}
 }

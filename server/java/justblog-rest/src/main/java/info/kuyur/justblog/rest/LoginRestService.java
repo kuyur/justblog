@@ -11,7 +11,7 @@ import javax.ws.rs.core.MediaType;
 import com.sun.jersey.spi.container.ResourceFilters;
 
 @ResourceFilters({ AuthenticationFilter.class })
-@Path("/Login")
+@Path("/login")
 public class LoginRestService {
 
 	private static final JustResult RESULT = new JustResult(true);

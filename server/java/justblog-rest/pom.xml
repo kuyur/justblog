@@ -139,11 +139,6 @@
 		</dependency>
 		<dependency>
 			<groupId>info.kuyur.justblog</groupId>
-			<artifactId>justblog-models</artifactId>
-			<version>1.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>info.kuyur.justblog</groupId>
 			<artifactId>justblog-service</artifactId>
 			<version>1.0.0</version>
 		</dependency>

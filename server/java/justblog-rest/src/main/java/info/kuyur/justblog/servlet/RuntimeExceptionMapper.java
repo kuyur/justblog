@@ -1,5 +1,7 @@
 package info.kuyur.justblog.servlet;
 
+import info.kuyur.justblog.utils.ClientMappableException;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -14,8 +16,9 @@ public class RuntimeExceptionMapper implements ExceptionMapper<RuntimeException>
 	@Override
 	public Response toResponse(RuntimeException e) {
 		if (e instanceof WebApplicationException) {
-			WebApplicationException wae = (WebApplicationException) e;
-			return wae.getResponse();
+			return ((WebApplicationException) e).getResponse();
+		} else if (e instanceof ClientMappableException) {
+			return ((ClientMappableException) e).getResponse();
 		} else {
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
 			.entity(DEFAULT_MESSAGE).type(MediaType.TEXT_PLAIN).build();

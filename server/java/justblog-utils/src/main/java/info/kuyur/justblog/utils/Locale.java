@@ -6,7 +6,7 @@ import java.util.ResourceBundle;
 public class Locale {
 
 	private static final String MESSAGE_NOT_FOUND = "Message not found.";
-	private static final String LOCALE_FILE_NOT_EXISTED = "Locale file locale_{1}.xml not existed.";
+	private static final String LOCALE_FILE_NOT_EXISTED = "Locale file locale_{1}.xml not existing.";
 
 	private String locale;
 	private ResourceBundle resourceBundle;
