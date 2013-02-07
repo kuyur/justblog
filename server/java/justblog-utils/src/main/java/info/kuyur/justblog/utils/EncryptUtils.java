@@ -1,4 +1,4 @@
-package info.kuyur.justblog.client.util;
+package info.kuyur.justblog.utils;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;

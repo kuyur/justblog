@@ -11,11 +11,11 @@ import info.kuyur.justblog.client.base.ClientException;
 import info.kuyur.justblog.client.http.ClientConfiguration;
 import info.kuyur.justblog.client.http.Method;
 import info.kuyur.justblog.client.util.ClientUtils;
-import info.kuyur.justblog.client.util.EncryptUtils;
 import info.kuyur.justblog.client.util.ResourceCloser;
 import info.kuyur.justblog.client.util.ResponseUtils;
 import info.kuyur.justblog.client.util.SignUtils;
 import info.kuyur.justblog.utils.Config;
+import info.kuyur.justblog.utils.EncryptUtils;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;

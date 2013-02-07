@@ -6,6 +6,7 @@ import info.kuyur.justblog.models.user.User;
 import info.kuyur.justblog.models.user.UserRole;
 import info.kuyur.justblog.services.UserService;
 import info.kuyur.justblog.servlet.filter.AuthenticationFilter;
+import info.kuyur.justblog.utils.ClientMappableException;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
@@ -17,15 +18,17 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
 
 import com.sun.jersey.spi.container.ResourceFilters;
 
 @ResourceFilters({ AuthenticationFilter.class })
+@Path("/user")
 public class UserRestService {
 
 	@GET
-	@Path("/user/")
 	@RolesAllowed("admin")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<User> getAllUsers() {
@@ -33,7 +36,6 @@ public class UserRestService {
 	}
 
 	@POST
-	@Path("/user/")
 	@RolesAllowed("admin")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -43,15 +45,20 @@ public class UserRestService {
 	}
 
 	@DELETE
-	@Path("/user/{userid}")
-	@RolesAllowed("admin")
+	@Path("/{userid}")
+	//@RolesAllowed("admin")
 	@Produces(MediaType.APPLICATION_JSON)
-	public boolean deleteUser(@PathParam("userid")Long userId) {
-		return new UserService().deleteUser(userId);
+	public boolean deleteUser(@PathParam("userid")Long userId,
+			@Context SecurityContext sc) {
+		if (sc.isUserInRole("admin")) {
+			return new UserService().deleteUser(userId);
+		} else {
+			throw new ClientMappableException("No authority");
+		}
 	}
 
 	@PUT
-	@Path("/user/{userid}")
+	@Path("/{userid}")
 	@RolesAllowed("reader")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -60,7 +67,7 @@ public class UserRestService {
 	}
 
 	@PUT
-	@Path("/user/{userid}/role/{role}")
+	@Path("/{userid}/role/{role}")
 	@RolesAllowed("admin")
 	@Produces(MediaType.APPLICATION_JSON)
 	public boolean changeAuthLevel(@PathParam("userid")Long userId,
@@ -70,7 +77,7 @@ public class UserRestService {
 	}
 
 	@PUT
-	@Path("/user/{userid}/password")
+	@Path("/{userid}/password")
 	@RolesAllowed("reader")
 	@Produces(MediaType.APPLICATION_JSON)
 	public boolean resetPassword(@PathParam("userid")Long userId,

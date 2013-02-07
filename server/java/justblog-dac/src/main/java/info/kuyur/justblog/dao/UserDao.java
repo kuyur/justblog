@@ -1,6 +1,7 @@
 package info.kuyur.justblog.dao;
 
 import info.kuyur.justblog.models.user.UserRole;
+import info.kuyur.justblog.utils.EncryptUtils;
 
 public class UserDao {
 
@@ -37,10 +38,12 @@ public class UserDao {
 	public Credentials getCredentials(String account) {
 		// TODO
 		if ("admin".equals(account)) {
-			return new Credentials("admin", "admin", UserRole.ADMIN);
+			String hashedKey = EncryptUtils.bytesToString(EncryptUtils.toSHA1("admin"));
+			return new Credentials("admin", hashedKey, UserRole.ADMIN);
 		}
 		if ("reader".equals(account)) {
-			return new Credentials("reader", "reader", UserRole.READER);
+			String hashedKey = EncryptUtils.bytesToString(EncryptUtils.toSHA1("reader"));
+			return new Credentials("reader", hashedKey, UserRole.READER);
 		}
 		return null;
 	}

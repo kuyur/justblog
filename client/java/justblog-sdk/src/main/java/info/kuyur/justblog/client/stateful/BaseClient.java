@@ -6,7 +6,6 @@ import info.kuyur.justblog.client.http.ClientConfiguration;
 import info.kuyur.justblog.client.http.ConcurrentDistinctCookieStore;
 import info.kuyur.justblog.client.http.Method;
 import info.kuyur.justblog.client.util.ClientUtils;
-import info.kuyur.justblog.client.util.EncryptUtils;
 import info.kuyur.justblog.client.util.ResourceCloser;
 import info.kuyur.justblog.client.util.ResponseUtils;
 import info.kuyur.justblog.client.util.SignUtils;
@@ -71,7 +70,7 @@ public class BaseClient implements ISessionClient {
 	private final CookieOrigin cookieOrigin;
 	private final ConcurrentDistinctCookieStore cookieStore = new ConcurrentDistinctCookieStore();;
 
-	private static final String AUTH_PATH = "/rest/stateful/login";
+	private static final String AUTH_PATH = "/strest/stateful/login";
 	private static final String SESSION_TOKEN = Config.LOGINED_SESSION_TOKEN;
 	private static final CookieSpecFactory COOKIE_SPEC_FACTORY = new AllowAllCookieSpecFactory();
 
@@ -87,7 +86,7 @@ public class BaseClient implements ISessionClient {
 			String account, String password) {
 		validateHost(hostname, port);
 		this.account = account;
-		this.hashedKey = EncryptUtils.toSHA1(password);
+		this.hashedKey = info.kuyur.justblog.utils.EncryptUtils.toSHA1(password);
 		this.baseAddress = (isSecure ? "https://" : "http://")
 			+ hostname
 			+ (isUsingNonDefaultPort(isSecure, port) ? ":" + String.valueOf(port) : "")

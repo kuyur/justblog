@@ -1,6 +1,7 @@
 package info.kuyur.justblog.client.util;
 
 import info.kuyur.justblog.utils.Config;
+import info.kuyur.justblog.utils.EncryptUtils;
 import info.kuyur.justblog.utils.Signature;
 
 import java.io.UnsupportedEncodingException;

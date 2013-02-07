@@ -9,5 +9,10 @@
   		<artifactId>justblog-models</artifactId>
   		<version>1.0.0</version>
   	</dependency>
+  	<dependency>
+  		<groupId>info.kuyur.justblog</groupId>
+  		<artifactId>justblog-utils</artifactId>
+  		<version>1.0.0</version>
+  	</dependency>
   </dependencies>
 </project>

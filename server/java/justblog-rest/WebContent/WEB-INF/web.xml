@@ -41,4 +41,15 @@
 			<role-name>reader</role-name>
 		</auth-constraint>
 	</security-constraint>
+	<login-config>
+		<auth-method>FORM</auth-method>
+		<realm-name>User Auth</realm-name>
+	</login-config>
+	<security-role>
+		<role-name>founder</role-name>
+		<role-name>admin</role-name>
+		<role-name>editor</role-name>
+		<role-name>author</role-name>
+		<role-name>reader</role-name>
+	</security-role>
 </web-app>

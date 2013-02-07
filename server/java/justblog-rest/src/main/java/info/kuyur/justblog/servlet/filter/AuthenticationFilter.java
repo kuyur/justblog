@@ -36,6 +36,9 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.sun.jersey.core.header.MediaTypes;
 import com.sun.jersey.core.util.ReaderWriter;
 import com.sun.jersey.spi.container.ContainerRequest;
@@ -44,6 +47,8 @@ import com.sun.jersey.spi.container.ContainerResponseFilter;
 import com.sun.jersey.spi.container.ResourceFilter;
 
 public class AuthenticationFilter implements ResourceFilter, ContainerRequestFilter {
+
+	private final Log logger = LogFactory.getLog(getClass());
 
 	@Override
 	public ContainerRequestFilter getRequestFilter() {
@@ -55,7 +60,6 @@ public class AuthenticationFilter implements ResourceFilter, ContainerRequestFil
 		return null;
 	}
 
-	// TODO To tomcat logs
 	@Override
 	public ContainerRequest filter(ContainerRequest request) {
 		Locale locale = LocaleLoader.getByCookie(request.getCookies().get(Config.LANG_TOKEN));
@@ -107,7 +111,7 @@ public class AuthenticationFilter implements ResourceFilter, ContainerRequestFil
 			Date ts = getParseTimestamp(timeStamp);
 			Calendar fromClient = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 			fromClient.setTime(ts);
-			// signature will effective in 100 seconds.
+			// signature will be effective in 100 seconds.
 			if (Math.abs(fromClient.compareTo(now)) > Config.DEFAULT_VALIDITY_PERIOD) {
 				throw new ClientMappableException("Obsolete signature.", Status.UNAUTHORIZED);
 			}
@@ -129,6 +133,8 @@ public class AuthenticationFilter implements ResourceFilter, ContainerRequestFil
 			if (sentSignature.equals(signature)) {
 				request.setSecurityContext(new MySecurityContext(credentials, isSecure));
 			} else {
+				logger.debug("Signature sent: " + sentSignature);
+				logger.debug("Signature calculated: " + signature);
 				throw new ClientMappableException("Incorrect signature.", Status.UNAUTHORIZED);
 			}
 		} catch (NoSuchAlgorithmException e) {
@@ -210,7 +216,7 @@ public class AuthenticationFilter implements ResourceFilter, ContainerRequestFil
 
 		@Override
 		public String getAuthenticationScheme() {
-			return SecurityContext.BASIC_AUTH;
+			return SecurityContext.FORM_AUTH;
 		}
 	}
 }

@@ -1,10 +1,7 @@
-package info.kuyur.justblog.client.stateful;
+package info.kuyur.justblog.client.stateless;
 
 import info.kuyur.justblog.client.annotation.Deleter;
 import info.kuyur.justblog.client.annotation.Creater;
-import info.kuyur.justblog.client.stateful.BaseClient;
-import info.kuyur.justblog.client.stateful.ISessionClient;
-import info.kuyur.justblog.client.stateful.ProxyClient;
 import info.kuyur.justblog.models.user.User;
 import info.kuyur.justblog.models.user.UserRole;
 
@@ -14,23 +11,19 @@ import java.util.List;
 
 import org.codehaus.jackson.type.TypeReference;
 
-public class UserClient extends ProxyClient{
+public class UserClient extends HmacClient{
 
 	/** API list*/
-	private static final String USER_LIST = "/strest/user";
-	private static final String USER_ADD = "/strest/user";
-	private static final String USER_DELETE = "/strest/user/{0}";
-	private static final String USER_UPDATE = "/strest/user/{0}";
-	private static final String USER_UPDATE_PASSWORD = "/strest/user/{0}/password";
-	private static final String USER_CHANGE_ROLE = "/strest/user/{0}/role/{1}";
+	private static final String USER_LIST = "/rest/user";
+	private static final String USER_ADD = "/rest/user";
+	private static final String USER_DELETE = "/rest/user/{0}";
+	private static final String USER_UPDATE = "/rest/user/{0}";
+	private static final String USER_UPDATE_PASSWORD = "/rest/user/{0}/password";
+	private static final String USER_CHANGE_ROLE = "/rest/user/{0}/role/{1}";
 
 	public UserClient(String hostname, int port, boolean isSecure, String basePath,
 			String account, String password) {
-		super(new BaseClient(hostname, port, isSecure, basePath, account, password));
-	}
-
-	public UserClient(ISessionClient baseClient) {
-		super(baseClient);
+		super(hostname, port, isSecure, basePath, account, password);
 	}
 
 	public List<User> getAllUsers() {

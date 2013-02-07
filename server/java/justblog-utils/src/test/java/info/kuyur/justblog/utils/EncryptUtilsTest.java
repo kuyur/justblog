@@ -1,6 +1,7 @@
-package info.kuyur.justblog.client.util;
+package info.kuyur.justblog.utils;
 
 import static org.junit.Assert.assertEquals;
+import info.kuyur.justblog.utils.EncryptUtils;
 
 import org.junit.Test;
 
