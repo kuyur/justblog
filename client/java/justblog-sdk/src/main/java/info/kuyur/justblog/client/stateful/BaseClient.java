@@ -4,6 +4,7 @@ import info.kuyur.justblog.client.base.ClientException;
 import info.kuyur.justblog.client.http.AllowAllCookieSpecFactory;
 import info.kuyur.justblog.client.http.ClientConfiguration;
 import info.kuyur.justblog.client.http.ConcurrentDistinctCookieStore;
+import info.kuyur.justblog.client.http.Method;
 import info.kuyur.justblog.client.util.ClientUtils;
 import info.kuyur.justblog.client.util.EncryptUtils;
 import info.kuyur.justblog.client.util.ResourceCloser;
@@ -61,22 +62,6 @@ import org.apache.http.protocol.HTTP;
 
 public class BaseClient implements ISessionClient {
 
-	public static enum Method {
-		GET("GET"),
-		POST("POST"),
-		PUT("PUT"),
-		DELETE("DELETE");
-
-		private String name;
-		private Method(String name) {
-			this.name = name;
-		}
-
-		public String toString() {
-			return name;
-		}
-	}
-
 	private final Log logger = LogFactory.getLog(getClass());
 
 	protected final DefaultHttpClient client;
@@ -87,12 +72,8 @@ public class BaseClient implements ISessionClient {
 	private final ConcurrentDistinctCookieStore cookieStore = new ConcurrentDistinctCookieStore();;
 
 	private static final String AUTH_PATH = "/rest/stateful/login";
-	private static final String ACCOUNT_FIELD = "account";
-	private static final String SIGN_FIELD = "sign";
-	private static final String TIMESTAMP_FIELD = "timestamp";
 	private static final String SESSION_TOKEN = Config.LOGINED_SESSION_TOKEN;
 	private static final CookieSpecFactory COOKIE_SPEC_FACTORY = new AllowAllCookieSpecFactory();
-	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
 	/**
 	 * @param hostname should like 127.0.0.1 or a domain name
@@ -158,10 +139,10 @@ public class BaseClient implements ISessionClient {
 	public void login() {
 		HttpPost post = new HttpPost(baseAddress + AUTH_PATH);
 		List<NameValuePair> pairs = new ArrayList<NameValuePair>();
-		pairs.add(new BasicNameValuePair(ACCOUNT_FIELD, account));
-		pairs.add(new BasicNameValuePair(TIMESTAMP_FIELD, SignUtils.getFormattedTimestamp()));
-		String sign = SignUtils.sign(pairs, hashedKey, Method.POST.toString(), baseAddress + AUTH_PATH);
-		pairs.add(new BasicNameValuePair(SIGN_FIELD, sign));
+		pairs.add(new BasicNameValuePair(Config.ACCOUNT_FIELD, account));
+		pairs.add(new BasicNameValuePair(Config.TIMESTAMP_FIELD, SignUtils.getFormattedTimestamp()));
+		String sign = SignUtils.sign(null, pairs, null, hashedKey, Method.POST.toString(), baseAddress + AUTH_PATH);
+		pairs.add(new BasicNameValuePair(Config.SIGN_FIELD, sign));
 
 		try {
 			post.addHeader(HTTP.CONTENT_TYPE, "application/x-www-form-urlencoded");
@@ -186,12 +167,16 @@ public class BaseClient implements ISessionClient {
 				throw new ClientException("Login Failed! " + ResponseUtils.getContentBodyString(response, "UTF-8"));
 			}
 		} catch (UnsupportedEncodingException e) {
+			logger.error("Error happens.", e);
 			throw new ClientException(e);
 		} catch (ClientProtocolException e) {
+			logger.error("Error happens.", e);
 			throw new ClientException(e);
 		} catch (IOException e) {
+			logger.error("Error happens.", e);
 			throw new ClientException(e);
 		} catch (MalformedCookieException e) {
+			logger.error("Error happens.", e);
 			throw new ClientException(e);
 		} finally {
 			post.releaseConnection();
@@ -213,6 +198,14 @@ public class BaseClient implements ISessionClient {
 	@Override
 	public void logout() {
 		cookieStore.clear();
+	}
+
+	/**
+	 * When the client is not in used anymore, close it.
+	 */
+	@Override
+	public void close() {
+		client.getConnectionManager().shutdown();
 	}
 
 	@Override
@@ -250,15 +243,17 @@ public class BaseClient implements ISessionClient {
 				buf.append(String.valueOf(status));
 				buf.append(", Status=");
 				buf.append(response.getStatusLine().getReasonPhrase());
-				buf.append(LINE_SEPARATOR);
+				buf.append(Config.LINE_SEPARATOR);
 				buf.append(ResponseUtils.getContentBodyString(response, "UTF-8"));
 				String message = buf.toString();
 				logger.info(message);
 				throw new ClientException(message);
 			}
 		} catch (ClientProtocolException e) {
+			logger.error("Error happens.", e);
 			throw new ClientException(e);
 		} catch (IOException e) {
+			logger.error("Error happens.", e);
 			throw new ClientException(e);
 		} finally {
 			ResourceCloser.close(is);
@@ -266,6 +261,10 @@ public class BaseClient implements ISessionClient {
 		}
 	}
 
+	/**
+	 * Notice that it won't check logined status when sending the request.<br>
+	 * Cookies won't be changed after any response received.
+	 */
 	@Override
 	public <T> T post(Type clazz, String resourcePath, Collection<NameValuePair> queryParams,
 			Collection<NameValuePair> bodyParams, Object bodyContent) {
@@ -302,15 +301,17 @@ public class BaseClient implements ISessionClient {
 				buf.append(String.valueOf(status));
 				buf.append(", Status=");
 				buf.append(response.getStatusLine().getReasonPhrase());
-				buf.append(LINE_SEPARATOR);
+				buf.append(Config.LINE_SEPARATOR);
 				buf.append(ResponseUtils.getContentBodyString(response, "UTF-8"));
 				String message = buf.toString();
 				logger.info(message);
 				throw new ClientException(message);
 			}
 		} catch (ClientProtocolException e) {
+			logger.error("Error happens.", e);
 			throw new ClientException(e);
 		} catch (IOException e) {
+			logger.error("Error happens.", e);
 			throw new ClientException(e);
 		} finally {
 			ResourceCloser.close(is);
@@ -318,6 +319,10 @@ public class BaseClient implements ISessionClient {
 		}
 	}
 
+	/**
+	 * Notice that it won't check logined status when sending the request.<br>
+	 * Cookies won't be changed after any response received.
+	 */
 	@Override
 	public File getFile(String pathToSave, String resourcePath, Collection<NameValuePair> queryParams) {
 		InputStream is = null;
@@ -341,15 +346,17 @@ public class BaseClient implements ISessionClient {
 				buf.append(String.valueOf(status));
 				buf.append(", Status=");
 				buf.append(response.getStatusLine().getReasonPhrase());
-				buf.append(LINE_SEPARATOR);
+				buf.append(Config.LINE_SEPARATOR);
 				buf.append(ResponseUtils.getContentBodyString(response, "UTF-8"));
 				String message = buf.toString();
 				logger.info(message);
 				throw new ClientException(message);
 			}
 		} catch (ClientProtocolException e) {
+			logger.error("Error happens.", e);
 			throw new ClientException(e);
 		} catch (IOException e) {
+			logger.error("Error happens.", e);
 			throw new ClientException(e);
 		} finally {
 			ResourceCloser.close(is);
@@ -357,9 +364,13 @@ public class BaseClient implements ISessionClient {
 		}
 	}
 
+	/**
+	 * Notice that it won't check logined status when sending the request.<br>
+	 * Cookies won't be changed after any response received.
+	 */
 	@Override
 	public <T> T postFile(Type clazz, String resourcePath, Collection<NameValuePair> queryParams,
-			Collection<NameValuePair> bodyParams, File file, String fileFiled) {
+			Collection<NameValuePair> bodyParams, File file, String fileField) {
 		if (!ClientUtils.fileExisting(file)) {
 			throw new ClientException("File not existing.");
 		}
@@ -374,7 +385,7 @@ public class BaseClient implements ISessionClient {
 			}
 			FileBody bin = new FileBody(file);
 			MultipartEntity entity = new MultipartEntity();
-			entity.addPart(fileFiled, bin);
+			entity.addPart(fileField, bin);
 			if (bodyParams != null) {
 				for (NameValuePair pair : bodyParams) {
 					entity.addPart(pair.getName(), new StringBody(pair.getValue(), Consts.UTF_8));
@@ -397,15 +408,17 @@ public class BaseClient implements ISessionClient {
 				buf.append(String.valueOf(status));
 				buf.append(", Status=");
 				buf.append(response.getStatusLine().getReasonPhrase());
-				buf.append(LINE_SEPARATOR);
+				buf.append(Config.LINE_SEPARATOR);
 				buf.append(ResponseUtils.getContentBodyString(response, "UTF-8"));
 				String message = buf.toString();
 				logger.info(message);
 				throw new ClientException(message);
 			}
 		} catch (ClientProtocolException e) {
+			logger.error("Error happens.", e);
 			throw new ClientException(e);
 		} catch (IOException e) {
+			logger.error("Error happens.", e);
 			throw new ClientException(e);
 		} finally {
 			ResourceCloser.close(is);
@@ -413,6 +426,81 @@ public class BaseClient implements ISessionClient {
 		}
 	}
 
+	/**
+	 * Notice that it won't check logined status when sending the request.<br>
+	 * Cookies won't be changed after any response received.
+	 */
+	@Override
+	public <T> T postFiles(Type clazz, String resourcePath, Collection<NameValuePair> queryParams,
+			Collection<NameValuePair> bodyParams, Map<String, File> files) {
+		if (files == null || files.size() <= 0) {
+			throw new ClientException("No file selected.");
+		}
+		InputStream is = null;
+		String queryString = (queryParams == null) ? "" : URLEncodedUtils.format(queryParams, Consts.UTF_8);
+		String prefix = (StringUtils.isEmpty(queryString)) ? "" : "?";
+		HttpPost post = new HttpPost(baseAddress + resourcePath + prefix + queryString);
+		try {
+			Header cookieHeader = ClientUtils.formatCookies(getCookies()); 
+			if (cookieHeader != null) {
+				post.setHeader(cookieHeader);
+			}
+			MultipartEntity entity = new MultipartEntity();
+			boolean noValidFile = true;
+			for (Map.Entry<String, File> fileWithField : files.entrySet()) {
+				if (ClientUtils.fileExisting(fileWithField.getValue())) {
+					FileBody bin = new FileBody(fileWithField.getValue());
+					entity.addPart(fileWithField.getKey(), bin);
+					noValidFile = false;
+				}
+			}
+			if (noValidFile) {
+				throw new ClientException("No file selected.");
+			}
+			if (bodyParams != null) {
+				for (NameValuePair pair : bodyParams) {
+					entity.addPart(pair.getName(), new StringBody(pair.getValue(), Consts.UTF_8));
+				}
+			}
+			post.setHeader(entity.getContentType());
+			post.setEntity(entity);
+			logger.info("Sending Request: " + post.getRequestLine());
+			HttpResponse response = client.execute(post);
+			int status = response.getStatusLine().getStatusCode();
+			if (status >= 200 && status <= 299) {
+				if (clazz == null || clazz == Void.class) {
+					return null;
+				}
+				is = response.getEntity().getContent();
+				return ClientUtils.readFromJson(is, clazz);
+			} else {
+				StringBuilder buf = new StringBuilder();
+				buf.append("Received error response:  Code=");
+				buf.append(String.valueOf(status));
+				buf.append(", Status=");
+				buf.append(response.getStatusLine().getReasonPhrase());
+				buf.append(Config.LINE_SEPARATOR);
+				buf.append(ResponseUtils.getContentBodyString(response, "UTF-8"));
+				String message = buf.toString();
+				logger.info(message);
+				throw new ClientException(message);
+			}
+		} catch (ClientProtocolException e) {
+			logger.error("Error happens.", e);
+			throw new ClientException(e);
+		} catch (IOException e) {
+			logger.error("Error happens.", e);
+			throw new ClientException(e);
+		} finally {
+			ResourceCloser.close(is);
+			post.releaseConnection();
+		}
+	}
+
+	/**
+	 * Notice that it won't check logined status when sending the request.<br>
+	 * Cookies won't be changed after any response received.
+	 */
 	@Override
 	public <T> T put(Type clazz, String resourcePath, Collection<NameValuePair> queryParams, Object bodyContent) {
 		InputStream is = null;
@@ -443,15 +531,17 @@ public class BaseClient implements ISessionClient {
 				buf.append(String.valueOf(status));
 				buf.append(", Status=");
 				buf.append(response.getStatusLine().getReasonPhrase());
-				buf.append(LINE_SEPARATOR);
+				buf.append(Config.LINE_SEPARATOR);
 				buf.append(ResponseUtils.getContentBodyString(response, "UTF-8"));
 				String message = buf.toString();
 				logger.info(message);
 				throw new ClientException(message);
 			}
 		} catch (ClientProtocolException e) {
+			logger.error("Error happens.", e);
 			throw new ClientException(e);
 		} catch (IOException e) {
+			logger.error("Error happens.", e);
 			throw new ClientException(e);
 		} finally {
 			ResourceCloser.close(is);
@@ -459,6 +549,10 @@ public class BaseClient implements ISessionClient {
 		}
 	}
 
+	/**
+	 * Notice that it won't check logined status when sending the request.<br>
+	 * Cookies won't be changed after any response received.
+	 */
 	@Override
 	public <T> T delete(Type clazz, String resourcePath, Collection<NameValuePair> queryParams) {
 		InputStream is = null;
@@ -485,15 +579,17 @@ public class BaseClient implements ISessionClient {
 				buf.append(String.valueOf(status));
 				buf.append(", Status=");
 				buf.append(response.getStatusLine().getReasonPhrase());
-				buf.append(LINE_SEPARATOR);
+				buf.append(Config.LINE_SEPARATOR);
 				buf.append(ResponseUtils.getContentBodyString(response, "UTF-8"));
 				String message = buf.toString();
 				logger.info(message);
 				throw new ClientException(message);
 			}
 		} catch (ClientProtocolException e) {
+			logger.error("Error happens.", e);
 			throw new ClientException(e);
 		} catch (IOException e) {
+			logger.error("Error happens.", e);
 			throw new ClientException(e);
 		} finally {
 			ResourceCloser.close(is);

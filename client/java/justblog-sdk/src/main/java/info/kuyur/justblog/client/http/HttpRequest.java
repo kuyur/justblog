@@ -5,13 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class HttpRequest {
-	public static enum Method {
-		GET,
-		POST,
-		PUT,
-		DELETE
-	}
-
 	// Query parameters
 	private Map<String, String> queryParameters = new HashMap<String, String>();
 	// Form parameters

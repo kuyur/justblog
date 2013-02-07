@@ -1,5 +1,6 @@
 package info.kuyur.justblog.client.util;
 
+import info.kuyur.justblog.utils.Config;
 import info.kuyur.justblog.utils.Signature;
 
 import java.io.UnsupportedEncodingException;
@@ -14,11 +15,12 @@ import java.util.SortedMap;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
+import org.apache.http.Consts;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
 
 public class SignUtils {
 
-	public static final String ALGORITHM = "HmacSHA256";
 	private SignUtils() {}
 
 	public static String getFormattedTimestamp() {
@@ -28,16 +30,35 @@ public class SignUtils {
 		return df.format(new Date());
 	}
 
-	public static String sign(Collection<NameValuePair> notSortedParams, byte[] hashedKey,
-			String method, String uri) {
+	/**
+	 * Notice: bodyParams's priority is higher than sendingObject's.
+	 * @param queryParams not URL encoded
+	 * @param bodyParams not URL encoded
+	 * @param sendingObject not URL encoded. It should be a json string or a xml string.
+	 * @param hashedKey
+	 * @param method
+	 * @param uri
+	 * @return
+	 */
+	public static String sign(Collection<NameValuePair> queryParams,
+			Collection<NameValuePair> bodyParams, String sendingObject,
+			byte[] hashedKey, String method, String uri) {
 		SortedMap<String, String> paramMap = new TreeMap<String, String>();
 		try {
-			for (NameValuePair param : notSortedParams) {
-				paramMap.put(param.getName(),
-					URLEncoder.encode(param.getValue(), Signature.DEFAULT_ENCODING));
+			if (queryParams != null) {
+				for (NameValuePair param : queryParams) {
+					paramMap.put(URLEncoder.encode(param.getName(), "UTF-8"),
+						URLEncoder.encode(param.getValue(), "UTF-8"));
+				}
 			}
 			String key = EncryptUtils.bytesToString(hashedKey);
-			return Signature.sign(paramMap, key, ALGORITHM, method, uri);
+			String sendingContent = null;
+			if (bodyParams != null) {
+				sendingContent = URLEncodedUtils.format(bodyParams, Consts.UTF_8);
+			} else if (sendingObject != null) {
+				sendingContent = URLEncoder.encode(sendingObject, "UTF-8");
+			}
+			return Signature.sign(paramMap, sendingContent, key, Config.ALGORITHM, method, uri);
 		} catch (InvalidKeyException e) {
 			throw new RuntimeException(e);
 		} catch (NoSuchAlgorithmException e) {

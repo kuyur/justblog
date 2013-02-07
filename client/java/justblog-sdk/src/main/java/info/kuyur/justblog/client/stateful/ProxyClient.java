@@ -4,6 +4,7 @@ import java.io.File;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.cookie.Cookie;
@@ -30,6 +31,11 @@ public abstract class ProxyClient implements ISessionClient {
 	}
 
 	@Override
+	public void close() {
+		baseClient.close();
+	}
+
+	@Override
 	public List<Cookie> getCookies() {
 		return baseClient.getCookies();
 	}
@@ -41,8 +47,14 @@ public abstract class ProxyClient implements ISessionClient {
 
 	@Override
 	public <T> T postFile(Type clazz, String resourcePath, Collection<NameValuePair> queryParams,
-			Collection<NameValuePair> bodyParams, File file, String fileFiled) {
-		return baseClient.<T>postFile(clazz, resourcePath, queryParams, bodyParams, file, fileFiled);
+			Collection<NameValuePair> bodyParams, File file, String fileField) {
+		return baseClient.<T>postFile(clazz, resourcePath, queryParams, bodyParams, file, fileField);
+	}
+
+	@Override
+	public <T> T postFiles(Type clazz, String resourcePath, Collection<NameValuePair> queryParams,
+			Collection<NameValuePair> bodyParams, Map<String, File> files) {
+		return baseClient.<T>postFiles(clazz, resourcePath, queryParams, bodyParams, files);
 	}
 
 	@Override
@@ -65,5 +77,4 @@ public abstract class ProxyClient implements ISessionClient {
 	public <T> T delete(Type clazz, String resourcePath, Collection<NameValuePair> queryParams) {
 		return baseClient.<T>delete(clazz, resourcePath, queryParams);
 	}
-
 }

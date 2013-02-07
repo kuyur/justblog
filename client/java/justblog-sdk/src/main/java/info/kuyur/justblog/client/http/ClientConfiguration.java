@@ -54,7 +54,7 @@ public class ClientConfiguration {
 	 * Uploading a big file may cost much time.
 	 * The number shouldn't be so small.
 	 */
-	public static final int CONNECTION_KEEP_TIMEOUT = 100 * 1000;
+	public static final long CONNECTION_KEEP_TIMEOUT = 100 * 1000;
 
 	/**
 	 * Optional size hint (in bytes) for the low level TCP send buffer. This is

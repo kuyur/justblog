@@ -8,11 +8,17 @@ import info.kuyur.justblog.utils.Config;
 import info.kuyur.justblog.utils.Locale;
 import info.kuyur.justblog.utils.LocaleLoader;
 import info.kuyur.justblog.utils.Signature;
+import info.kuyur.justblog.utils.StreamUtils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
@@ -27,8 +33,11 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 
+import com.sun.jersey.core.header.MediaTypes;
+import com.sun.jersey.core.util.ReaderWriter;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 import com.sun.jersey.spi.container.ContainerResponseFilter;
@@ -49,13 +58,12 @@ public class AuthenticationFilter implements ResourceFilter, ContainerRequestFil
 	// TODO To tomcat logs
 	@Override
 	public ContainerRequest filter(ContainerRequest request) {
-		Locale locale = LocaleLoader.getByCookie(request.getCookies().get("lang"));
+		Locale locale = LocaleLoader.getByCookie(request.getCookies().get(Config.LANG_TOKEN));
 
 		String requestMethod = request.getMethod();
 		String domain = request.getHeaderValue("Host");
 		URI uri = request.getRequestUri();
 		String path = uri.getPath();
-		String algorithm = "HmacSHA256";
 
 		final boolean isSecure = uri.getScheme().equals("https");
 		String account = null;
@@ -66,14 +74,14 @@ public class AuthenticationFilter implements ResourceFilter, ContainerRequestFil
 		try {
 			for (Entry<String, List<String>> entry : request.getQueryParameters(false).entrySet()) {
 				if (entry.getValue().size() == 1) {
-					if (entry.getKey().equals("signature")) {
+					if (entry.getKey().equals(Config.SIGN_FIELD)) {
 						sentSignature = URLDecoder.decode(entry.getValue().get(0), Config.DEFAULT_ENCODING);
 						continue;
 					}
-					if (entry.getKey().equals("account")) {
+					if (entry.getKey().equals(Config.ACCOUNT_FIELD)) {
 						account = URLDecoder.decode(entry.getValue().get(0), Config.DEFAULT_ENCODING);
 					}
-					if (entry.getKey().equals("timestamp")) {
+					if (entry.getKey().equals(Config.TIMESTAMP_FIELD)) {
 						timeStamp =  URLDecoder.decode(entry.getValue().get(0), Config.DEFAULT_ENCODING);
 					}
 					sorted.put(entry.getKey(), entry.getValue().get(0));
@@ -81,6 +89,13 @@ public class AuthenticationFilter implements ResourceFilter, ContainerRequestFil
 			}
 		} catch (UnsupportedEncodingException e) {
 			throw new ClientMappableException(locale.getString("Unauthorized"), Status.UNAUTHORIZED);
+		}
+		String contentBody = null;
+		if (MediaTypes.typeEquals(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getMediaType()) ||
+				MediaTypes.typeEquals(MediaType.APPLICATION_JSON_TYPE, request.getMediaType())) {
+			contentBody = getContentBodyFromRequest(request);
+		} else if (MediaTypes.typeEquals(MediaType.MULTIPART_FORM_DATA_TYPE, request.getMediaType())) {
+			// ignoring. Multipart form data may be so big.
 		}
 
 		if (account == null || sentSignature == null || timeStamp == null) {
@@ -94,38 +109,60 @@ public class AuthenticationFilter implements ResourceFilter, ContainerRequestFil
 			fromClient.setTime(ts);
 			// signature will effective in 100 seconds.
 			if (Math.abs(fromClient.compareTo(now)) > Config.DEFAULT_VALIDITY_PERIOD) {
-				throw new ClientMappableException("InvalidSignature", Status.UNAUTHORIZED);
+				throw new ClientMappableException("Obsolete signature.", Status.UNAUTHORIZED);
 			}
 		} catch (ParseException e1) {
-			throw new ClientMappableException("Unauthorized", Status.UNAUTHORIZED);
+			throw new ClientMappableException("Invalid timestamp.", Status.UNAUTHORIZED);
 		}
 
 		// read from db.
 		UserService service = new UserService();
 		final Credentials credentials = service.getCredentials(account);
 		if (credentials == null) {
-			throw new ClientMappableException("InvalidAccount", Status.UNAUTHORIZED);
+			throw new ClientMappableException("Invalid account.", Status.UNAUTHORIZED);
 		}
 
 		String scheme = uri.getScheme();
 		try {
-			String signature = Signature.sign(sorted, credentials.getHashedKey(), algorithm, requestMethod,
+			String signature = Signature.sign(sorted, contentBody, credentials.getHashedKey(), Config.ALGORITHM, requestMethod,
 					scheme + "://" + domain + path);
 			if (sentSignature.equals(signature)) {
 				request.setSecurityContext(new MySecurityContext(credentials, isSecure));
 			} else {
-				throw new ClientMappableException("IncorrectSignature", Status.UNAUTHORIZED);
+				throw new ClientMappableException("Incorrect signature.", Status.UNAUTHORIZED);
 			}
 		} catch (NoSuchAlgorithmException e) {
-			throw new ClientMappableException("Unauthorized", Status.UNAUTHORIZED);
+			throw new ClientMappableException(locale.getString("Unauthorized"), Status.UNAUTHORIZED);
 		} catch (InvalidKeyException e) {
-			throw new ClientMappableException("Unauthorized", Status.UNAUTHORIZED);
+			throw new ClientMappableException(locale.getString("Unauthorized"), Status.UNAUTHORIZED);
 		} catch (UnsupportedEncodingException e) {
-			throw new ClientMappableException("Unauthorized", Status.UNAUTHORIZED);
+			throw new ClientMappableException(locale.getString("Unauthorized"), Status.UNAUTHORIZED);
 		} catch (URISyntaxException e) {
-			throw new ClientMappableException("Unauthorized", Status.UNAUTHORIZED);
+			throw new ClientMappableException(locale.getString("Unauthorized"), Status.UNAUTHORIZED);
 		}
 		return request;
+	}
+
+	private String getContentBodyFromRequest(ContainerRequest request) {
+		InputStream in = request.getEntityInputStream();
+		if (in == null) {
+			return null;
+		}
+		if (in.getClass() != ByteArrayInputStream.class) {
+			// Buffer input
+			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+			try {
+				ReaderWriter.writeTo(in, byteArrayOutputStream);
+			} catch (IOException e) {
+				return null;
+			}
+			in = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+			request.setEntityInputStream(in);
+		}
+		ByteArrayInputStream bais = (ByteArrayInputStream) in;
+		String contentBody = StreamUtils.readInputStream(bais, Charset.forName(Config.DEFAULT_ENCODING));
+		bais.reset();
+		return contentBody;
 	}
 
 	/**
