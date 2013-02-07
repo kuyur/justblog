@@ -125,7 +125,7 @@ public class HmacClient {
 					return null;
 				}
 				is = response.getEntity().getContent();
-				return ClientUtils.readFromJson(is, clazz);
+				return ClientUtils.<T>readFromJson(is, clazz);
 			} else {
 				StringBuilder buf = new StringBuilder();
 				buf.append("Received error response:  Code=");
@@ -194,7 +194,7 @@ public class HmacClient {
 					return null;
 				}
 				is = response.getEntity().getContent();
-				return ClientUtils.readFromJson(is, clazz);
+				return ClientUtils.<T>readFromJson(is, clazz);
 			} else {
 				StringBuilder buf = new StringBuilder();
 				buf.append("Received error response:  Code=");
@@ -255,7 +255,7 @@ public class HmacClient {
 					return null;
 				}
 				is = response.getEntity().getContent();
-				return ClientUtils.readFromJson(is, clazz);
+				return ClientUtils.<T>readFromJson(is, clazz);
 			} else {
 				StringBuilder buf = new StringBuilder();
 				buf.append("Received error response:  Code=");
@@ -309,7 +309,7 @@ public class HmacClient {
 					return null;
 				}
 				is = response.getEntity().getContent();
-				return ClientUtils.readFromJson(is, clazz);
+				return ClientUtils.<T>readFromJson(is, clazz);
 			} else {
 				StringBuilder buf = new StringBuilder();
 				buf.append("Received error response:  Code=");
