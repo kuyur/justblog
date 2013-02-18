@@ -11,6 +11,14 @@
 	<servlet>
 		<servlet-name>Resources</servlet-name>
 		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+		<init-param>
+			<param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
+			<param-value>info.kuyur.justblog.servlet.filter.AuthenticationFilter</param-value>
+		</init-param>
+		<init-param>
+			<param-name>com.sun.jersey.spi.container.ResourceFilters</param-name>
+			<param-value>com.sun.jersey.api.container.filter.RolesAllowedResourceFilterFactory</param-value>
+		</init-param>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>Resources</servlet-name>
@@ -33,23 +41,5 @@
 			<http-method>LOCK</http-method>
 			<http-method>UNLOCK</http-method>
 		</web-resource-collection>
-		<auth-constraint>
-			<role-name>founder</role-name>
-			<role-name>admin</role-name>
-			<role-name>editor</role-name>
-			<role-name>author</role-name>
-			<role-name>reader</role-name>
-		</auth-constraint>
 	</security-constraint>
-	<!--<login-config>
-		<auth-method>FORM</auth-method>
-		<realm-name>User Auth</realm-name>
-	</login-config>
-	<security-role>
-		<role-name>founder</role-name>
-		<role-name>admin</role-name>
-		<role-name>editor</role-name>
-		<role-name>author</role-name>
-		<role-name>reader</role-name>
-	</security-role>-->
 </web-app>

@@ -48,7 +48,7 @@ import com.sun.jersey.spi.container.ResourceFilter;
 
 public class AuthenticationFilter implements ResourceFilter, ContainerRequestFilter {
 
-	private final Log logger = LogFactory.getLog(getClass());
+	private static final Log logger = LogFactory.getLog(AuthenticationFilter.class);
 
 	@Override
 	public ContainerRequestFilter getRequestFilter() {
@@ -206,6 +206,8 @@ public class AuthenticationFilter implements ResourceFilter, ContainerRequestFil
 		@Override
 		public boolean isUserInRole(String role) {
 			UserRole userRole = credentials.getRole();
+			logger.debug("Require: " + role);
+			logger.debug("Actually: " + ((userRole == null) ? "" : userRole.toString()));
 			return (userRole == null) ? false : userRole.containRole(role);
 		}
 
@@ -216,7 +218,7 @@ public class AuthenticationFilter implements ResourceFilter, ContainerRequestFil
 
 		@Override
 		public String getAuthenticationScheme() {
-			return SecurityContext.FORM_AUTH;
+			return SecurityContext.BASIC_AUTH;
 		}
 	}
 }
