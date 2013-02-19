@@ -23,10 +23,6 @@ public enum UserRole {
 	private String role;
 
 	private UserRole(String role) {
-		this.setRole(role);
-	}
-
-	public void setRole(String role) {
 		this.role = role;
 	}
 

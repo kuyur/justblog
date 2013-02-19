@@ -6,7 +6,6 @@ import info.kuyur.justblog.models.user.User;
 import info.kuyur.justblog.models.user.UserRole;
 import info.kuyur.justblog.services.UserService;
 import info.kuyur.justblog.servlet.filter.AuthenticationFilter;
-import info.kuyur.justblog.utils.ClientMappableException;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
@@ -44,26 +43,33 @@ public class UserRestService {
 		return null;
 	}
 
-	@DELETE
-	@Path("/{userid}")
-	//@RolesAllowed("admin")
+	@PUT
+	@RolesAllowed("reader")
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public boolean deleteUser(@PathParam("userid")Long userId,
-			@Context SecurityContext sc) {
-		if (sc.isUserInRole("admin")) {
-			return new UserService().deleteUser(userId);
-		} else {
-			throw new ClientMappableException("No authority");
-		}
+	public User updateSelf(@Context SecurityContext sc, User user) {
+		// TODO check user
+		user.setAccount(sc.getUserPrincipal().getName());
+		// TODO
+		return null;
 	}
 
 	@PUT
 	@Path("/{userid}")
-	@RolesAllowed("reader")
+	@RolesAllowed("admin")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public User updateUser(User user) {
+		// TODO
 		return null;
+	}
+
+	@DELETE
+	@Path("/{userid}")
+	@RolesAllowed("admin")
+	@Produces(MediaType.APPLICATION_JSON)
+	public boolean deleteUser(@PathParam("userid")Long userId) {
+		return new UserService().deleteUser(userId);
 	}
 
 	@PUT
@@ -71,18 +77,21 @@ public class UserRestService {
 	@RolesAllowed("admin")
 	@Produces(MediaType.APPLICATION_JSON)
 	public boolean changeAuthLevel(@PathParam("userid")Long userId,
-			@PathParam("role") UserRole level) {
+			@PathParam("role") String newLevel) {
+		UserRole newRole = UserRole.toUserRole(newLevel);
+		if (newRole == null) {
+			return false;
+		}
 		// TODO
-		return false;
+		return true;
 	}
 
 	@PUT
-	@Path("/{userid}/password")
+	@Path("/password")
 	@RolesAllowed("reader")
 	@Produces(MediaType.APPLICATION_JSON)
-	public boolean resetPassword(@PathParam("userid")Long userId,
-			@QueryParam("pass")String encryptedPass) {
-		// TODO
-		return false;
+	public boolean updatePassword(@Context SecurityContext sc,
+			@QueryParam("hash")String encryptedMixedHash) {
+		return new UserService().updatePassword(sc.getUserPrincipal().getName(), encryptedMixedHash);
 	}
 }

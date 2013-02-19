@@ -52,7 +52,7 @@ public class SignUtils {
 						URLEncoder.encode(param.getValue(), "UTF-8"));
 				}
 			}
-			String key = EncryptUtils.bytesToString(hashedKey);
+			String key = EncryptUtils.bytesToHex(hashedKey);
 			String sendingContent = null;
 			if (bodyParams != null) {
 				sendingContent = URLEncodedUtils.format(bodyParams, Consts.UTF_8);

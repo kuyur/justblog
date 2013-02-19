@@ -4,11 +4,16 @@ import info.kuyur.justblog.client.annotation.Deleter;
 import info.kuyur.justblog.client.annotation.Creater;
 import info.kuyur.justblog.models.user.User;
 import info.kuyur.justblog.models.user.UserRole;
+import info.kuyur.justblog.utils.EncryptUtils;
 
 import java.lang.reflect.Type;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
 import org.codehaus.jackson.type.TypeReference;
 
 public class UserClient extends HmacClient{
@@ -16,10 +21,11 @@ public class UserClient extends HmacClient{
 	/** API list*/
 	private static final String USER_LIST = "/rest/user";
 	private static final String USER_ADD = "/rest/user";
-	private static final String USER_DELETE = "/rest/user/{0}";
+	private static final String USER_UPDATE_SELF = "/rest/user";
 	private static final String USER_UPDATE = "/rest/user/{0}";
-	private static final String USER_UPDATE_PASSWORD = "/rest/user/{0}/password";
+	private static final String USER_DELETE = "/rest/user/{0}";
 	private static final String USER_CHANGE_ROLE = "/rest/user/{0}/role/{1}";
+	private static final String USER_UPDATE_PASSWORD = "/rest/user/password";
 
 	public UserClient(String hostname, int port, boolean isSecure, String basePath,
 			String account, String password) {
@@ -36,10 +42,10 @@ public class UserClient extends HmacClient{
 		return super.post(User.class, USER_ADD, null, null, user);
 	}
 
-	@Deleter
-	public void deleteUser(Long userId) {
-		String path = MessageFormat.format(USER_DELETE, String.valueOf(userId));
-		super.delete(Void.class, path, null);
+	public User updateSelf(User user) {
+		User updated = super.put(User.class, USER_UPDATE_SELF, null, user);
+		super.updateAccount(updated.getAccount());
+		return updated;
 	}
 
 	public User updateUser(User user) {
@@ -47,14 +53,28 @@ public class UserClient extends HmacClient{
 		return super.put(User.class, path, null, user);
 	}
 
-	public void updatePassword(Long userId, String newPassword) {
-		String path = MessageFormat.format(USER_UPDATE_PASSWORD, String.valueOf(userId));
-		// TODO
-		super.put(Void.class, path, null, null);
+	@Deleter
+	public boolean deleteUser(Long userId) {
+		String path = MessageFormat.format(USER_DELETE, String.valueOf(userId));
+		return super.delete(boolean.class, path, null);
 	}
 
-	public void changeRole(Long userId, UserRole role) {
+	public boolean changeRole(Long userId, UserRole role) {
 		String path = MessageFormat.format(USER_CHANGE_ROLE, String.valueOf(userId), role.toString());
-		super.put(Void.class, path, null, null);
+		return super.put(boolean.class, path, null, null);
+	}
+
+	public boolean updatePassword(String newPassword) {
+		byte[] oldHash = super.getHashedKey();
+		byte[] newHash = EncryptUtils.toSHA1(newPassword);
+		String mixedHashString = EncryptUtils.bytesToHex(EncryptUtils.mixHashesWithXOR(oldHash, newHash));
+		Collection<NameValuePair> queryParams = new ArrayList<NameValuePair>();
+		queryParams.add(new BasicNameValuePair("hash", mixedHashString));
+		if (super.put(boolean.class, USER_UPDATE_PASSWORD, queryParams, null)) {
+			super.updateHashedKey(newHash);
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

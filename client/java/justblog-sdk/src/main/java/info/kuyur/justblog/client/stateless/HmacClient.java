@@ -47,8 +47,8 @@ public class HmacClient {
 	private final Log logger = LogFactory.getLog(getClass());
 
 	protected final DefaultHttpClient client;
-	private final String account;
-	private final byte[] hashedKey;
+	private String account;
+	private byte[] hashedKey;
 	private final String baseAddress;
 
 	public HmacClient(String hostname, int port, boolean isSecure, String basePath,
@@ -94,6 +94,18 @@ public class HmacClient {
 			return false;
 
 		return true;
+	}
+
+	protected void updateAccount(String account) {
+		this.account = account;
+	}
+
+	protected byte[] getHashedKey() {
+		return this.hashedKey;
+	}
+
+	protected void updateHashedKey(byte[] newHash) {
+		this.hashedKey = newHash;
 	}
 
 	/**

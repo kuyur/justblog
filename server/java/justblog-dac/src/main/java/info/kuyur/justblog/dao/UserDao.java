@@ -38,13 +38,17 @@ public class UserDao {
 	public Credentials getCredentials(String account) {
 		// TODO
 		if ("admin".equals(account)) {
-			String hashedKey = EncryptUtils.bytesToString(EncryptUtils.toSHA1("admin"));
+			String hashedKey = EncryptUtils.bytesToHex(EncryptUtils.toSHA1("admin"));
 			return new Credentials("admin", hashedKey, UserRole.ADMIN);
 		}
 		if ("reader".equals(account)) {
-			String hashedKey = EncryptUtils.bytesToString(EncryptUtils.toSHA1("reader"));
+			String hashedKey = EncryptUtils.bytesToHex(EncryptUtils.toSHA1("reader"));
 			return new Credentials("reader", hashedKey, UserRole.READER);
 		}
 		return null;
+	}
+
+	public void updateHashedKey(String account, String hashedKey) {
+		// TODO
 	}
 }
