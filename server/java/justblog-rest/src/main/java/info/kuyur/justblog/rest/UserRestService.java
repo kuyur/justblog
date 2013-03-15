@@ -38,7 +38,7 @@ public class UserRestService {
 	@RolesAllowed("admin")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public User createUser() {
+	public User createUser(User user) {
 		// TODO
 		return null;
 	}
