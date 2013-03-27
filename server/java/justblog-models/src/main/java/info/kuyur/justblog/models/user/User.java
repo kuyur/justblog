@@ -1,5 +1,7 @@
 package info.kuyur.justblog.models.user;
 
+import java.util.Date;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -24,6 +26,9 @@ public class User {
 	@XmlElement(name="Url")
 	private String url;
 
+	@XmlElement(name="Registered")
+	private Date registered;
+
 	@XmlElement(name="Role")
 	private UserRole role;
 
@@ -32,13 +37,14 @@ public class User {
 	}
 
 	public User(Long userId, String account, String nicename, String email,
-			String url, UserRole role) {
+			String url, Date registered, UserRole role) {
 		super();
 		this.userId = userId;
 		this.account = account;
 		this.nicename = nicename;
 		this.email = email;
 		this.url = url;
+		this.registered = registered;
 		this.role = role;
 	}
 
@@ -82,6 +88,14 @@ public class User {
 		this.url = url;
 	}
 
+	public Date getRegistered() {
+		return registered;
+	}
+
+	public void setRegistered(Date registered) {
+		this.registered = registered;
+	}
+
 	public UserRole getRole() {
 		return role;
 	}
@@ -94,6 +108,6 @@ public class User {
 	public String toString() {
 		return "User [userId=" + userId + ", account=" + account
 				+ ", nicename=" + nicename + ", email=" + email + ", url="
-				+ url + ", role=" + role + "]";
+				+ url + ", registered=" + registered + ", role=" + role + "]";
 	}
 }
